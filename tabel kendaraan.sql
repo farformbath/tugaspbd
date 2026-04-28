@@ -1,5 +1,6 @@
+
 -- =========================
--- TABLE KENDARAAN
+-- CREATE TABLE KENDARAAN
 -- =========================
 CREATE TABLE kendaraan (
     id_kendaraan INT AUTO_INCREMENT PRIMARY KEY,
@@ -12,7 +13,7 @@ CREATE TABLE kendaraan (
     tahun YEAR NOT NULL,
     warna VARCHAR(30),
 
-    jenis ENUM('mobil', 'motor') NOT NULL DEFAULT 'mobil',
+    jenis ENUM('mobil', 'motor') NOT NULL,
 
     kapasitas_penumpang INT NOT NULL,
     transmisi ENUM('manual', 'matic') NOT NULL,
@@ -29,21 +30,12 @@ CREATE TABLE kendaraan (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
         ON UPDATE CURRENT_TIMESTAMP,
 
-    -- =========================
-    -- CONSTRAINT VALIDATION
-    -- =========================
-    CONSTRAINT chk_kapasitas 
-        CHECK (kapasitas_penumpang > 0),
+    -- CONSTRAINT
+    CONSTRAINT chk_kapasitas CHECK (kapasitas_penumpang > 0),
+    CONSTRAINT chk_km CHECK (km_terakhir >= 0),
+    CONSTRAINT chk_tahun CHECK (tahun BETWEEN 2000 AND YEAR(CURDATE())),
 
-    CONSTRAINT chk_km 
-        CHECK (km_terakhir >= 0),
-
-    CONSTRAINT chk_tahun 
-        CHECK (tahun BETWEEN 2000 AND YEAR(CURDATE())),
-
-    -- =========================
     -- FOREIGN KEY
-    -- =========================
     CONSTRAINT fk_kendaraan_kategori
         FOREIGN KEY (id_kategori) 
         REFERENCES kategori(id_kategori)
@@ -56,17 +48,29 @@ CREATE TABLE kendaraan (
         ON UPDATE CASCADE 
         ON DELETE SET NULL,
 
-    -- =========================
-    -- INDEX (INLINE)
-    -- =========================
+    -- INDEX
     INDEX idx_status (status),
     INDEX idx_kategori (id_kategori),
     INDEX idx_cabang (id_cabang_homebase)
 );
 
 -- =========================
--- TRIGGER 1
--- Maintenance tidak boleh disewa
+-- INSERT DATA (MOBIL + MOTOR)
+-- =========================
+INSERT INTO kendaraan 
+(nomor_polisi, merk, model, tahun, warna, jenis, kapasitas_penumpang, transmisi, status, km_terakhir, id_kategori, id_cabang_homebase)
+VALUES
+-- MOTOR
+('H1111AA','Honda','Beat',2023,'Hitam','motor',2,'matic','tersedia',3000,1,1),
+('H2222BB','Yamaha','Vixion',2022,'Merah','motor',2,'manual','tersedia',8000,2,2),
+
+-- MOBIL
+('H3333CC','Honda','Brio',2023,'Putih','mobil',5,'matic','tersedia',5000,3,1),
+('H4444DD','Toyota','Avanza',2022,'Hitam','mobil',7,'manual','disewa',15000,4,2),
+('H5555EE','Toyota','Innova',2020,'Silver','mobil',7,'manual','maintenance',45000,4,3);
+
+-- =========================
+-- TRIGGER 1: Maintenance tidak boleh disewa
 -- =========================
 DELIMITER $$
 
@@ -83,8 +87,7 @@ END$$
 DELIMITER ;
 
 -- =========================
--- TRIGGER 2
--- KM tidak boleh turun
+-- TRIGGER 2: KM tidak boleh turun
 -- =========================
 DELIMITER $$
 
